@@ -285,9 +285,11 @@ IRCALLDEF(IRCALLNAME)
   NULL
 };
 
+#include "lj_traceerr.h"
 static const char *const trace_errors[] = {
 #define TREDEF(name, msg)	msg,
-#include "lj_traceerr.h"
+  FOR_ALL_TRACE_ERR(TREDEF)
+#undef TREDEF
   NULL
 };
 

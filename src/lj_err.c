@@ -70,9 +70,11 @@
 /* -- Error messages ------------------------------------------------------ */
 
 /* Error message strings. */
+#include "lj_errmsg.h"
 LJ_DATADEF const char *lj_err_allmsg =
 #define ERRDEF(name, msg)	msg "\0"
-#include "lj_errmsg.h"
+  FOR_ALL_ERR(ERRDEF)
+#undef ERRDEF
 ;
 
 /* -- Internal frame unwinding -------------------------------------------- */

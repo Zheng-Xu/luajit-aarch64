@@ -133,7 +133,7 @@ static void libdef_func(BuildCtx *ctx, char *p, int arg)
       libdef_name(regfunc == REGFUNC_NOREGUV ? "" : p, arg);
     }
   } else if (ctx->mode == BUILD_ffdef) {
-    fprintf(ctx->fp, "FFDEF(%s)\n", p);
+    fprintf(ctx->fp, "FFDEF(%s) \\\n", p);
   } else if (ctx->mode == BUILD_recdef) {
     if (strlen(p) > sizeof(funcname)-1) {
       fprintf(stderr, "Error: function name too long: '%s'\n", p);
@@ -359,6 +359,10 @@ void emit_lib(BuildCtx *ctx)
   recffid = ffid = FF_C+1;
   ffasmfunc = 0;
 
+  if (ctx->mode == BUILD_ffdef){
+      fprintf(ctx->fp, "#define FOR_ALL_FF(M) \\\n");
+  }
+
   while ((fname = *ctx->args++)) {
     char buf[256];  /* We don't care about analyzing lines longer than that. */
     FILE *fp;
@@ -427,7 +431,7 @@ void emit_lib(BuildCtx *ctx)
   }
 
   if (ctx->mode == BUILD_ffdef) {
-    fprintf(ctx->fp, "\n#undef FFDEF\n\n");
+    fprintf(ctx->fp, "\n\n");
     fprintf(ctx->fp,
       "#ifndef FF_NUM_ASMFUNC\n#define FF_NUM_ASMFUNC %d\n#endif\n\n",
       ffasmfunc);

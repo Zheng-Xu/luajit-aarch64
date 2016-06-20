@@ -13,9 +13,11 @@
 #include "lj_dispatch.h"
 
 /* Trace errors. */
+#include "lj_traceerr.h"
 typedef enum {
 #define TREDEF(name, msg)	LJ_TRERR_##name,
-#include "lj_traceerr.h"
+  FOR_ALL_TRACE_ERR(TREDEF)
+#undef TREDEF
   LJ_TRERR__MAX
 } TraceError;
 

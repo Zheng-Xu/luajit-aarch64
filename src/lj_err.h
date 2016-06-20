@@ -10,10 +10,12 @@
 
 #include "lj_obj.h"
 
+#include "lj_errmsg.h"
 typedef enum {
 #define ERRDEF(name, msg) \
   LJ_ERR_##name, LJ_ERR_##name##_ = LJ_ERR_##name + sizeof(msg)-1,
-#include "lj_errmsg.h"
+  FOR_ALL_ERR(ERRDEF)
+#undef ERRDEF
   LJ_ERR__MAX
 } ErrMsg;
 
