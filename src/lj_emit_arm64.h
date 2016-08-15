@@ -3,6 +3,9 @@
 ** Copyright !!!TODO
 */
 
+#define IS_SIGNED_IMM(size, value) \
+  ((value) >= -(1 << ((size) - 1)) && (value) < (1 << ((size) - 1)))
+
 static Reg ra_allock(ASMState *as, int32_t k, RegSet allow);
 
 static void emit_loadn(ASMState *as, Reg r, cTValue *tv)
@@ -268,7 +271,7 @@ static void emit_branch(ASMState *as, A64Ins ai, MCode *target)
 {
   MCode *p = as->mcp;
   ptrdiff_t delta = target - (p - 1);
-  lua_assert(((delta + 0x02000000) >> 26) == 0);
+  lua_assert(IS_SIGNED_IMM(26, delta));
   *--p = ai | ((uint32_t)delta & 0x03ffffffu);
   as->mcp = p;
 }
@@ -277,7 +280,7 @@ static void emit_cond_branch(ASMState *as, A64CC cond, MCode *target)
 {
   MCode *p = as->mcp;
   ptrdiff_t delta = target - (p - 1);
-  lua_assert(((delta + 0x40000) >> 19) == 0);
+  lua_assert(IS_SIGNED_IMM(19, delta));
   *--p = A64I_Bcond | (((uint32_t)delta & 0x7ffff)<<5) | cond;
   as->mcp = p;
 }
@@ -302,12 +305,13 @@ static void emit_addptr(ASMState *as, Reg r, int32_t ofs)
 static void emit_call(ASMState *as, void *target)
 {
   static const int32_t imm_bits = 26;
-  MCode *p = --as->mcp;
-  ptrdiff_t delta = (char *)target - (char *)p;
-  delta >>= 2;
-  if ((delta + (1 << (imm_bits -1))) >= 0) {
-    *p = A64I_BL | (delta & ((1 << imm_bits) - 1));
-  } else {  /* Target out of range. */
-    lua_unimpl();
+  ptrdiff_t delta = (char *)target - (char *)(as->mcp - 1);
+  lua_assert(delta & 3 == 0);
+  if (IS_SIGNED_IMM(imm_bits, delta >> 2)) {
+    *--as->mcp = A64I_BL | ((delta >> 2) & ((1 << imm_bits) - 1));
+  } else {
+    /* Use LR for indirect calls. */
+    emit_n(as, A64I_BLR, RID_LR);
+    emit_loadu64(as, RID_LR, target);
   }
 }
